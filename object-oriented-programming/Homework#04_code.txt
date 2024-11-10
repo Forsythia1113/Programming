@@ -1,0 +1,112 @@
+#include <iostream>
+#include <string>
+
+//공통으로 가지는 변수들을 프린터로 정의
+class Printer {
+protected:
+    std::string model;
+    std::string manufacturer;
+    int printedCount;
+    int availableCount;
+
+public:
+    Printer(const std::string& model, const std::string& manufacturer, int availableCount)
+        : model(model), manufacturer(manufacturer), printedCount(0), availableCount(availableCount) {}
+
+    virtual ~Printer() {}
+
+    virtual void print(int pages) = 0; // 순수 가상 함수
+    virtual void show() const = 0;
+};
+
+//공통으로 가지지 않는 변수(잉크 개수)
+class InkJetPrinter : public Printer {
+    int availableInk;
+
+public:
+    InkJetPrinter(const std::string& model, const std::string& manufacturer, int availableCount, int availableInk)
+        : Printer(model, manufacturer, availableCount), availableInk(availableInk) {}
+
+    ~InkJetPrinter() override {}
+
+    void print(int pages) override { //main 함수에서 pages의 개수를 입력 받고
+        if (availableCount >= pages && availableInk >= pages) {
+            printedCount += pages;  
+            availableCount -= pages;
+            availableInk -= pages; //잉크와 남은 종이 개수만큼을 pages에 할당한 변수 크기만큼 제거
+            std::cout << "인쇄했습니다.\n";
+        }
+        else {
+            std::cout << "용지가 부족하거나 잉크가 부족합니다.\n";
+        }
+    }
+
+    void show() const override {
+        std::cout << model << ", " << manufacturer << ", 남은 종이 " << availableCount << "장, 남은 잉크 " << availableInk << "\n";
+    }
+};
+
+//공통적으로 가지지 않는 변수(토너 개수)
+class LaserPrinter : public Printer {
+    int availableToner;
+
+public:
+    LaserPrinter(const std::string& model, const std::string& manufacturer, int availableCount, int availableToner)
+        : Printer(model, manufacturer, availableCount), availableToner(availableToner) {}
+
+    ~LaserPrinter() override {}
+
+    void print(int pages) override { //InkJetPrinter와 동일한 방법으로 코딩 및 제거
+        if (availableCount >= pages && availableToner >= pages) {
+            printedCount += pages;
+            availableCount -= pages;
+            availableToner -= pages;
+            std::cout << "인쇄했습니다.\n";
+        }
+        else {
+            std::cout << "용지가 부족하거나 토너가 부족합니다.\n";
+        }
+    }
+
+    void show() const override {
+        std::cout << model << ", " << manufacturer << ", 남은 종이 " << availableCount << "장, 남은 토너 " << availableToner << "\n";
+    }
+};
+
+int main() {
+    InkJetPrinter inkJet("Officejet V40", "HP", 5, 10);
+    LaserPrinter laser("SCX-6x45", "Samsung", 3, 20);
+
+    while (true) { //사용을 끝낼 때 까지 무한 반복
+        std::cout << "현재 작동중인 2 대의 프린터는 아래와 같다\n";
+        inkJet.show();
+        laser.show();
+
+        std::cout << "프린터(1:잉크젯, 2:레이저)와 매수 입력>> "; //어떤 프린터를 쓸지 구분하는 코드 + 얼마 복사할지의 코드
+        int choice, pages;
+        std::cin >> choice >> pages;
+
+        if (choice == 1) {
+            inkJet.print(pages);
+        }
+        else if (choice == 2) {
+            laser.print(pages);
+        }
+        else { //만약 1,2중 프린터를 고르지 않거나 인쇄 매수가 초과될 때
+            std::cout << "잘못된 선택입니다.\n";
+            continue;
+        }
+
+        inkJet.show();
+        laser.show();
+
+        std::cout << "계속 프린트 하시겠습니까(y/n)>> "; //종료나 재시작을 알리는 코드
+        char cont;
+        std::cin >> cont;
+        if (cont == 'n' || cont == 'N') { //만약 'n'이나 'N'을 입력 받으면
+            break; //코드가 꺼지고 소멸자를 실행한다.
+        }
+    }
+
+    return 0;
+}
